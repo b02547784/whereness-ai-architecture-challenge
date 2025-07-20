@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Architecture Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 900px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            color: #6c757d;
+            font-size: 1.1em;
+            font-weight: 400;
+        }
+
+        .sketch-section {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .sketch-section h3 {
+            color: #495057;
+            font-weight: 500;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .sketch-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .sketch-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .sketch-placeholder {
+            width: 100%;
+            height: 240px;
+            background: #ffffff;
+            border: 2px dashed #dee2e6;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            font-size: 1.1em;
+            flex-direction: column;
+        }
+
+        .sketch-placeholder .icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            color: #adb5bd;
+        }
+
+        .sketch-error {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .status-container {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1em;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid;
+        }
+
+        .status-offline { 
+            background: #6c757d; 
+            border-color: #6c757d;
+        }
+        
+        .status-starting { 
+            background: #ffc107; 
+            border-color: #ffc107;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-ready { 
+            background: #28a745; 
+            border-color: #28a745;
+        }
+        
+        .status-generating { 
+            background: #007bff; 
+            border-color: #007bff;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-stopping { 
+            background: #dc3545; 
+            border-color: #dc3545;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-error { 
+            background: #dc3545; 
+            border-color: #dc3545;
+        }
+
+        .status-building { 
+            background: #17a2b8; 
+            border-color: #17a2b8;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 160px;
+            background: #ffffff;
+            color: #495057;
+        }
+
+        .btn-primary {
+            background: #007bff;
+            border-color: #007bff;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #0056b3;
+            border-color: #0056b3;
+        }
+
+        .btn-secondary {
+            background: #28a745;
+            border-color: #28a745;
+            color: #ffffff;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #1e7e34;
+            border-color: #1e7e34;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            border-color: #17a2b8;
+            color: #ffffff;
+        }
+
+        .btn-info:hover:not(:disabled) {
+            background: #117a8b;
+            border-color: #117a8b;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            border-color: #dc3545;
+            color: #ffffff;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #c82333;
+            border-color: #c82333;
+        }
+
+        .btn-emergency {
+            background: #dc3545;
+            border-color: #dc3545;
+            color: #ffffff;
+            font-weight: 600;
+            border: 2px solid #dc3545;
+        }
+
+        .btn-emergency:hover:not(:disabled) {
+            background: #a71e2a;
+            border-color: #a71e2a;
+            transform: scale(1.02);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 20px;
+            border: 3px solid #e9ecef;
+            border-top: 3px solid #007bff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading h3 {
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+
+        .loading p {
+            color: #6c757d;
+            font-size: 1em;
+        }
+
+        .result-container {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            padding: 30px;
+            display: none;
+            margin-top: 30px;
+        }
+
+        .result-container.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-container h3 {
+            color: #495057;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            font-weight: 500;
+        }
+
+        .generated-image {
+            max-width: 100%;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 10px 0;
+            display: none;
+            font-weight: 500;
+            border: 1px solid;
+        }
+
+        .message.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message-success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .message-info {
+            background: #d1ecf1;
+            border-color: #bee5eb;
+            color: #0c5460;
+        }
+
+        .message-warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .cost-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #856404;
+            font-size: 0.9em;
+        }
+
+        .cost-warning strong {
+            color: #d39e00;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+                margin: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .control-row {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 280px;
+            }
+
+            .sketch-placeholder {
+                height: 180px;
+                font-size: 1em;
+            }
+
+            .sketch-placeholder .icon {
+                font-size: 2.5em;
+            }
+
+            .status-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Architecture Generator</h1>
+            <p>Transform your building sketch into professional architectural rendering with SDXL + ControlNet</p>
+        </div>
+
+        <div class="sketch-section">
+            <h3>Building Sketch</h3>
+            <div class="sketch-container">
+                <img id="sketchImage" class="sketch-image" style="display: none;" alt="Building Sketch">
+                <div class="sketch-placeholder" id="sketchPlaceholder">
+                    <div class="icon">📐</div>
+                    <div>Loading building sketch...</div>
+                </div>
+            </div>
+            <div class="sketch-error" id="sketchError" style="display: none;">
+                Sketch not found. Please upload building_sketch.png to the control/ folder in S3.
+            </div>
+        </div>
+
+        <div class="status-container">
+            <div class="status-grid">
+                <div class="status-indicator">
+                    <div class="status-dot status-offline" id="statusDot"></div>
+                    <span id="statusText">AI Model: Offline</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot status-offline" id="containerDot"></div>
+                    <span id="containerText">Container: Not Built</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cost-warning">
+            <strong>💰 Cost Warning:</strong> SageMaker ml.g5.4xlarge costs $5.67/hour when running. 
+            Auto-stop after 120 minutes of inactivity is enabled. Always stop the model when not in use!
+        </div>
+
+        <div class="controls">
+            <div class="control-row">
+                <button class="btn btn-info" id="buildBtn" onclick="buildContainer()">
+                    Build AI Container
+                </button>
+                <button class="btn btn-primary" id="startBtn" onclick="startModel()" disabled>
+                    Start AI Model
+                </button>
+                <button class="btn btn-secondary" id="generateBtn" onclick="generateImage()" disabled>
+                    Generate Architecture
+                </button>
+                <button class="btn btn-danger" id="stopBtn" onclick="stopModel()" disabled>
+                    Stop Model
+                </button>
+            </div>
+            <div class="control-row">
+                <button class="btn btn-emergency" id="emergencyBtn" onclick="emergencyStop()">
+                    EMERGENCY STOP
+                </button>
+            </div>
+        </div>
+
+        <div class="messages">
+            <div class="message message-success" id="successMessage"></div>
+            <div class="message message-info" id="infoMessage"></div>
+            <div class="message message-warning" id="warningMessage"></div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <h3>Processing</h3>
+            <p id="loadingText">Processing your request...</p>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+            <h3>Generated Architecture</h3>
+            <img id="generatedImage" class="generated-image" alt="AI Generated Architecture">
+        </div>
+    </div>
+
+    <script>
+        // API Configuration - UPDATE THESE WITH YOUR ACTUAL VALUES
+        const API_BASE_URL = 'https://YOUR_API_GATEWAY_ID.execute-api.YOUR_REGION.amazonaws.com/prod';
+        const IMAGES_BUCKET_NAME = 'YOUR_IMAGES_BUCKET_NAME';
+        
+        let statusPollingInterval;
+        let isGenerating = false;
+        let isBuildingContainer = false;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            console.log('Initializing Architecture Generator');
+            
+            // Check if API URL is configured
+            if (API_BASE_URL.includes('YOUR_API_GATEWAY_ID')) {
+                showMessage('Please configure API endpoint and bucket name in the code.', 'warning');
+                return;
+            }
+            
+            // Load sketch image from S3
+            loadSketchImage();
+            
+            // Start status polling
+            startStatusPolling();
+            
+            // Show welcome message
+            showMessage('Welcome! First build the container, then upload your sketch, start the model, and generate.', 'info');
+        }
+
+        // Load sketch image from S3
+        async function loadSketchImage() {
+            try {
+                const sketchUrl = `https://${IMAGES_BUCKET_NAME}.s3.amazonaws.com/control/building_sketch.png`;
+                
+                const img = document.getElementById('sketchImage');
+                const placeholder = document.getElementById('sketchPlaceholder');
+                const errorDiv = document.getElementById('sketchError');
+                
+                img.onload = function() {
+                    placeholder.style.display = 'none';
+                    errorDiv.style.display = 'none';
+                    img.style.display = 'block';
+                };
+                
+                img.onerror = function() {
+                    placeholder.style.display = 'none';
+                    img.style.display = 'none';
+                    errorDiv.style.display = 'block';
+                };
+                
+                img.src = sketchUrl;
+                
+            } catch (error) {
+                console.error('Error loading sketch:', error);
+                document.getElementById('sketchPlaceholder').style.display = 'none';
+                document.getElementById('sketchError').style.display = 'block';
+            }
+        }
+
+        // Build container
+        async function buildContainer() {
+            if (isBuildingContainer) return;
+            
+            try {
+                isBuildingContainer = true;
+                document.getElementById('loading').classList.add('show');
+                document.getElementById('loadingText').textContent = 'Building AI container... This may take 30-60 minutes.';
+                updateButtonStates({ build: true, start: true, generate: true, stop: true });
+                
+                showMessage('Starting container build... This will take 30-60 minutes.', 'info');
+                updateContainerStatus('building');
+                
+                const response = await fetch(`${API_BASE_URL}/build`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.status === 'already_built') {
+                        showMessage('Container already built and ready!', 'success');
+                        updateContainerStatus('ready');
+                    } else if (data.status === 'built') {
+                        showMessage('Container built successfully!', 'success');
+                        updateContainerStatus('ready');
+                    } else if (data.status === 'building') {
+                        showMessage('Container is building. Please wait and check status manually.', 'info');
+                        updateContainerStatus('building');
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to build container');
+                }
+            } catch (error) {
+                console.error('Error building container:', error);
+                showMessage(`Build error: ${error.message}`, 'warning');
+                updateContainerStatus('error');
+            } finally {
+                isBuildingContainer = false;
+                document.getElementById('loading').classList.remove('show');
+                checkAndUpdateButtons();
+            }
+        }
+
+        // Start AI model
+        async function startModel() {
+            try {
+                showMessage('Starting AI model...', 'info');
+                updateButtonStates({ start: true, generate: false, stop: false });
+                
+                const response = await fetch(`${API_BASE_URL}/model/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.status === 'already_running') {
+                        showMessage('AI model is ready.', 'success');
+                        updateStatus('ready');
+                    } else {
+                        showMessage('AI model starting up... This takes 10-15 minutes.', 'info');
+                        updateStatus('starting');
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to start model');
+                }
+            } catch (error) {
+                console.error('Error starting model:', error);
+                showMessage(`Error: ${error.message}`, 'warning');
+                updateButtonStates({ start: false, generate: false, stop: false });
+            }
+        }
+
+        // Stop model
+        async function stopModel() {
+            try {
+                showMessage('Stopping AI model...', 'info');
+                updateButtonStates({ start: false, generate: false, stop: true });
+                
+                const response = await fetch(`${API_BASE_URL}/model/stop`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('AI model stopped. Billing stopped.', 'success');
+                    updateStatus('stopping');
+                } else {
+                    throw new Error(data.error || 'Failed to stop model');
+                }
+            } catch (error) {
+                console.error('Error stopping model:', error);
+                showMessage(`Error: ${error.message}`, 'warning');
+                updateButtonStates({ start: false, generate: false, stop: false });
+            }
+        }
+
+        // Generate architecture
+        async function generateImage() {
+            if (isGenerating) return;
+            
+            try {
+                isGenerating = true;
+                document.getElementById('loading').classList.add('show');
+                document.getElementById('loadingText').textContent = 'Creating architectural rendering with ControlNet... 60-90 seconds.';
+                document.getElementById('resultContainer').classList.remove('show');
+                updateButtonStates({ start: false, generate: true, stop: false });
+                
+                showMessage('Creating architectural rendering...', 'info');
+                
+                const response = await fetch(`${API_BASE_URL}/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('generatedImage').src = data.image_url;
+                    document.getElementById('resultContainer').classList.add('show');
+                    showMessage('Architecture generated successfully! ✨', 'success');
+                } else {
+                    throw new Error(data.error || 'Failed to generate image');
+                }
+            } catch (error) {
+                console.error('Error generating image:', error);
+                showMessage(`Generation failed: ${error.message}`, 'warning');
+            } finally {
+                isGenerating = false;
+                document.getElementById('loading').classList.remove('show');
+                checkAndUpdateButtons();
+            }
+        }
+
+        // Emergency stop
+        async function emergencyStop() {
+            if (!confirm('EMERGENCY STOP\n\nThis will immediately stop all AI models and halt billing.\n\nAre you sure?')) {
+                return;
+            }
+            
+            try {
+                showMessage('Executing emergency stop...', 'warning');
+                updateButtonStates({ start: true, generate: true, stop: true, build: false });
+                
+                const response = await fetch(`${API_BASE_URL}/emergency-stop`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Emergency stop executed! All billing stopped.', 'success');
+                    updateStatus('offline');
+                } else {
+                    throw new Error(data.error || 'Emergency stop failed');
+                }
+            } catch (error) {
+                console.error('Emergency stop error:', error);
+                showMessage(`Emergency stop error: ${error.message}`, 'warning');
+            } finally {
+                setTimeout(checkStatus, 2000);
+            }
+        }
+
+        // Check status
+        async function checkStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/model/status`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    updateStatus(data.status);
+                    updateContainerStatus(data.container_built ? 'ready' : 'not_built');
+                    
+                    if (data.warning) {
+                        showMessage(data.warning, 'warning');
+                    }
+                }
+            } catch (error) {
+                updateStatus('error');
+                updateContainerStatus('error');
+            }
+        }
+
+        // Update status display
+        function updateStatus(status) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+            
+            statusDot.className = 'status-dot';
+            
+            let statusMessage = '';
+            let enableGenerate = false;
+            let enableStop = false;
+            
+            switch (status) {
+                case 'offline':
+                    statusDot.classList.add('status-offline');
+                    statusMessage = 'AI Model: Offline';
+                    break;
+                case 'starting':
+                    statusDot.classList.add('status-starting');
+                    statusMessage = 'AI Model: Starting (10-15 min)';
+                    enableStop = true;
+                    break;
+                case 'ready':
+                    statusDot.classList.add('status-ready');
+                    statusMessage = 'AI Model: Ready';
+                    enableGenerate = true;
+                    enableStop = true;
+                    break;
+                case 'generating':
+                    statusDot.classList.add('status-generating');
+                    statusMessage = 'AI Model: Generating';
+                    enableStop = true;
+                    break;
+                case 'stopping':
+                    statusDot.classList.add('status-stopping');
+                    statusMessage = 'AI Model: Stopping';
+                    break;
+                case 'error':
+                    statusDot.classList.add('status-error');
+                    statusMessage = 'AI Model: Error';
+                    break;
+                default:
+                    statusDot.classList.add('status-offline');
+                    statusMessage = 'AI Model: Unknown';
+            }
+            
+            statusText.textContent = statusMessage;
+            
+            if (!isGenerating && !isBuildingContainer) {
+                updateButtonStates({
+                    start: status === 'starting' || status === 'stopping',
+                    generate: !enableGenerate,
+                    stop: !enableStop
+                });
+            }
+        }
+
+        // Update container status
+        function updateContainerStatus(status) {
+            const containerDot = document.getElementById('containerDot');
+            const containerText = document.getElementById('containerText');
+            
+            containerDot.className = 'status-dot';
+            
+            let containerMessage = '';
+            let enableStart = false;
+            
+            switch (status) {
+                case 'not_built':
+                    containerDot.classList.add('status-offline');
+                    containerMessage = 'Container: Not Built';
+                    break;
+                case 'building':
+                    containerDot.classList.add('status-building');
+                    containerMessage = 'Container: Building';
+                    break;
+                case 'ready':
+                    containerDot.classList.add('status-ready');
+                    containerMessage = 'Container: Ready';
+                    enableStart = true;
+                    break;
+                case 'error':
+                    containerDot.classList.add('status-error');
+                    containerMessage = 'Container: Error';
+                    break;
+                default:
+                    containerDot.classList.add('status-offline');
+                    containerMessage = 'Container: Unknown';
+            }
+            
+            containerText.textContent = containerMessage;
+            
+            if (!isGenerating && !isBuildingContainer) {
+                document.getElementById('startBtn').disabled = !enableStart;
+            }
+        }
+
+        // Update button states
+        function updateButtonStates(disabled) {
+            if (disabled.build !== undefined) document.getElementById('buildBtn').disabled = disabled.build;
+            if (disabled.start !== undefined) document.getElementById('startBtn').disabled = disabled.start;
+            if (disabled.generate !== undefined) document.getElementById('generateBtn').disabled = disabled.generate;
+            if (disabled.stop !== undefined) document.getElementById('stopBtn').disabled = disabled.stop;
+        }
+
+        // Show messages
+        function showMessage(message, type) {
+            const messageTypes = ['success', 'info', 'warning'];
+            
+            messageTypes.forEach(t => {
+                const el = document.getElementById(`${t}Message`);
+                el.classList.remove('show');
+            });
+            
+            const messageEl = document.getElementById(`${type}Message`);
+            messageEl.textContent = message;
+            messageEl.classList.add('show');
+            
+            setTimeout(() => {
+                messageEl.classList.remove('show');
+            }, 8000);
+        }
+
+        function checkAndUpdateButtons() {
+            setTimeout(checkStatus, 1000);
+        }
+
+        // Status polling
+        function startStatusPolling() {
+            if (API_BASE_URL.includes('YOUR_API_GATEWAY_ID')) return;
+            
+            checkStatus();
+            statusPollingInterval = setInterval(checkStatus, 5000);
+        }
+
+        function stopStatusPolling() {
+            if (statusPollingInterval) {
+                clearInterval(statusPollingInterval);
+            }
+        }
+
+        // Cleanup
+        window.addEventListener('beforeunload', stopStatusPolling);
+        
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                stopStatusPolling();
+            } else {
+                startStatusPolling();
+            }
+        });
+    </script>
+</body>
+</html>
