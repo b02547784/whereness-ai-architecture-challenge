@@ -214,7 +214,6 @@ cartoon, sketch style, unrealistic proportions, gothic, classical, ornate detail
 ```
 ├── cloudformation_template.yaml    # AWS infrastructure definition
 ├── index.html                     # Frontend web interface
-├── inference.py                   # SDXL + ControlNet inference logic
 ├── requirements.txt               # Python dependencies
 └── README.md                      # This documentation
 ```
